@@ -1,0 +1,94 @@
+name: 'Apply terraform changes'
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  plan:
+    environment: 'dev'
+    runs-on: [ self-hosted ]
+    defaults:
+      run:
+        working-directory: ./terraform
+    steps:
+      - name: Terraform - checkout
+        uses: actions/checkout@v3
+
+      - name: Use required terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.7
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+          ##      - name: config url
+          ##        id: https
+          ##        run: git config --global url."https://access-token:${{ steps.generate_token.outputs.token }}@github.com".insteadOf "https://github.com"
+          ##
+      - name: Terraform Init
+        id: init
+        run: terraform init -no-color -input=false -lock=true -get=true
+
+      - name: Terraform Validate
+        id: validate
+        run: |
+          terraform validate -no-color
+
+      - name: Terraform Plan
+        env:
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        id: plan
+        run: |
+          terraform plan -no-color -out=plan.out
+        continue-on-error: true
+
+  apply:
+    environment: 'prod'
+    needs: [ plan ]
+    runs-on: [ self-hosted ]
+    defaults:
+      run:
+        working-directory: ./terraform
+    steps:
+      - name: Terraform - checkout
+        uses: actions/checkout@v3
+
+      - name: Use required terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.7
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+          ##      - name: config url
+          ##        id: https
+          ##        run: git config --global url."https://access-token:${{ steps.generate_token.outputs.token }}@github.com".insteadOf "https://github.com"
+          ##
+      - name: Terraform Init
+        id: init
+        run: terraform init -no-color -input=false -lock=true -get=true
+
+      - name: Terraform apply
+        run: |
+          echo terraform apply -auto-approve
+        continue-on-error: true
