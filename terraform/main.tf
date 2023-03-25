@@ -4,7 +4,7 @@ module "ec2_instance" {
   name    = "github-runner"
 
   ami                    = "ami-0778521d914d23bc1"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.small"
   key_name               = "cosmolabs"
   monitoring             = false
   vpc_security_group_ids = ["sg-0c645f23a80e13e0b"]
