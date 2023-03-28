@@ -37,7 +37,7 @@ jobs:
         continue-on-error: true
 
       - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
+        if: ${{ steps.plan.outputs.exitcode > 0 }}
         run: |
           echo "Drift detected on this terraform workspace"
           exit 1
