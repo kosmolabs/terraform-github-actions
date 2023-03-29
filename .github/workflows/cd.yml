@@ -7,8 +7,6 @@ on:
 
 jobs:
   plan:
-    environment: 'dev'
-    runs-on: [ self-hosted ]
     defaults:
       run:
         working-directory: ./terraform
@@ -25,46 +23,62 @@ jobs:
         with:
           node-version: '12'
 
-      - name: Terraform Init
-        id: init
-        run: terraform init -no-color -input=false -lock=true -get=true
-
-      - name: Terraform Validate
-        id: validate
+      - name: Install gh cli
         run: |
-          terraform validate -no-color
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
 
-      - name: Terraform Plan
-        id: plan
+      - name: Create issue
         run: |
-          terraform plan -no-color -out=plan.out
-        continue-on-error: true
+          gh auth login --with-token <<< "${{ GITHUB_TOKEN }}"
+          gh issue create --title "My new issue" --body "Here are more details"
+          exit 1
 
-  apply:
-    environment: 'prod'
-    needs: [ plan ]
-    runs-on: [ self-hosted ]
-    defaults:
-      run:
-        working-directory: ./terraform
-    steps:
-      - name: Terraform - checkout
-        uses: actions/checkout@v3
 
-      - name: Use required terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.1.7
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '12'
-
-      - name: Terraform Init
-        id: init
-        run: terraform init -no-color -input=false -lock=true -get=true
-
-      - name: Terraform apply
-        run: |
-          echo terraform apply -auto-approve
-        continue-on-error: true
+          ##      - name: Terraform Init
+          ##        id: init
+          ##        run: terraform init -no-color -input=false -lock=true -get=true
+          ##
+          ##      - name: Terraform Validate
+          ##        id: validate
+          ##        run: |
+          ##          terraform validate -no-color
+          ##
+          ##      - name: Terraform Plan
+          ##        id: plan
+          ##        run: |
+          ##          terraform plan -no-color -out=plan.out
+          ##        continue-on-error: true
+          ##
+          ##  apply:
+          ##    environment: 'prod'
+          ##    needs: [ plan ]
+          ##    runs-on: [ self-hosted ]
+          ##    defaults:
+          ##      run:
+          ##        working-directory: ./terraform
+          ##    steps:
+          ##      - name: Terraform - checkout
+          ##        uses: actions/checkout@v3
+          ##
+          ##      - name: Use required terraform
+          ##        uses: hashicorp/setup-terraform@v2
+          ##        with:
+          ##          terraform_version: 1.1.7
+          ##
+          ##      - uses: actions/setup-node@v2
+          ##        with:
+          ##          node-version: '12'
+          ##
+          ##      - name: Terraform Init
+          ##        id: init
+          ##        run: terraform init -no-color -input=false -lock=true -get=true
+          ##
+          ##      - name: Terraform apply
+          ##        run: |
+          ##          echo terraform apply -auto-approve
+          ##        continue-on-error: true
