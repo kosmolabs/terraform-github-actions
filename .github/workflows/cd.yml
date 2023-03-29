@@ -34,7 +34,7 @@ jobs:
 
       - name: Create issue
         run: |
-          gh auth login --with-token <<< "${{ GITHUB_TOKEN }}"
+          gh auth login
           gh issue create --title "My new issue" --body "Here are more details"
           exit 1
 
