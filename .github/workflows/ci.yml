@@ -1,4 +1,4 @@
-name: 'test dp'
+name: 'test deployment keys'
 
 on:
   push:
