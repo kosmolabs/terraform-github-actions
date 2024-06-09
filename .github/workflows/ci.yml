@@ -8,7 +8,7 @@ on:
 
 jobs:
   plan:
-    runs-on: [self-hosted, Linux, kubernetes]
+    runs-on: [self-hosted, linux, kubernetes]
     defaults:
       run:
         working-directory: ./terraform
